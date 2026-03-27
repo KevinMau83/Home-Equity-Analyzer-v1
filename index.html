@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#163a63" />
+  <title>Homebuyer Equity Analyzer</title>
+  <style>
+    :root{
+      --bg:#eef3f8;
+      --card:#ffffff;
+      --ink:#1f2937;
+      --muted:#667085;
+      --line:#d9e2ec;
+      --brand:#163a63;
+      --brand2:#24588f;
+      --input:#fff8cf;
+      --good:#eaf7ee;
+      --good-border:#b9e0c3;
+      --warn:#fff6e6;
+      --warn-border:#f5d08a;
+      --bad:#fdecec;
+      --bad-border:#efb2b2;
+      --shadow:0 10px 28px rgba(17,24,39,.08);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+    body{ padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+    .app{ max-width:760px; margin:0 auto; padding:14px 12px 28px; }
+
+    .hero{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:18px 16px;
+      margin-bottom:14px;
+    }
+    .hero h1{ margin:0 0 6px; font-size:1.4rem; line-height:1.15; }
+    .hero p{ margin:0; opacity:.96; font-size:.96rem; }
+    .tag{
+      display:inline-block; margin-top:10px; padding:6px 10px;
+      border-radius:999px; background:rgba(255,255,255,.14); font-weight:700; font-size:.78rem;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:12px;
+    }
+    .section-title{
+      margin:0 0 8px;
+      font-size:1.02rem;
+      color:var(--brand);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .subtle{ margin:0 0 10px; font-size:.84rem; color:var(--muted); }
+
+    .field{
+      background:#fbfcfe;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
+    }
+    .field:last-child{ margin-bottom:0; }
+    .field label{
+      display:block;
+      margin:0 0 6px;
+      font-size:.88rem;
+      font-weight:700;
+    }
+    .hint{ display:block; margin-top:5px; color:var(--muted); font-size:.76rem; line-height:1.35; }
+
+    .money-wrap{ position:relative; }
+    .money-wrap .prefix{
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:#4b5563; font-weight:700; pointer-events:none;
+    }
+
+    input[type="number"]{
+      width:100%;
+      min-height:50px;
+      border:1px solid #cfd8e3;
+      border-radius:12px;
+      background:var(--input);
+      color:var(--ink);
+      font-size:18px;
+      padding:12px 12px 12px 28px;
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:textfield;
+    }
+    input.percent{ padding-left:12px; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance:none; margin:0;
+    }
+    input:focus{
+      outline:none;
+      border-color:var(--brand2);
+      box-shadow:0 0 0 4px rgba(36,88,143,.12);
+      background:#fffbea;
+    }
+
+    .stack > * + *{ margin-top:10px; }
+    .result-grid{ display:grid; grid-template-columns:1fr; gap:10px; }
+    @media (min-width:650px){
+      .result-grid.two{ grid-template-columns:1fr 1fr; }
+      .result-grid.three{ grid-template-columns:1fr 1fr 1fr; }
+    }
+
+    .result{
+      border:1px solid var(--line);
+      background:#fbfcfe;
+      border-radius:14px;
+      padding:12px;
+    }
+    .result .label{
+      color:var(--muted);
+      font-size:.75rem;
+      text-transform:uppercase;
+      font-weight:800;
+      letter-spacing:.45px;
+      margin-bottom:5px;
+    }
+    .result .value{
+      font-size:1.25rem;
+      font-weight:800;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .good{ background:var(--good); border-color:var(--good-border); }
+    .warn{ background:var(--warn); border-color:var(--warn-border); }
+    .bad{ background:var(--bad); border-color:var(--bad-border); }
+
+    .meter{
+      text-align:center;
+      padding:14px;
+      border-radius:16px;
+      font-size:1.04rem;
+      font-weight:900;
+      border:1px solid var(--line);
+    }
+    .plain{
+      margin:0;
+      font-size:.97rem;
+      line-height:1.45;
+    }
+
+    details{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fbfcfe;
+      overflow:hidden;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding:14px;
+      font-weight:800;
+      color:var(--brand);
+      user-select:none;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .details-body{ padding:0 14px 14px; }
+
+    .btn-row{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top:12px;
+    }
+    button{
+      border:none; border-radius:12px;
+      min-height:46px; padding:0 14px;
+      font-size:.95rem; font-weight:800;
+      cursor:pointer;
+      background:var(--brand); color:#fff;
+    }
+    button.secondary{ background:#e8eff7; color:var(--brand); }
+    button:active{ transform:translateY(1px); }
+
+    .foot{
+      text-align:center;
+      color:var(--muted);
+      font-size:.78rem;
+      margin-top:8px;
+      line-height:1.4;
+    }
+
+    .mini{ font-size:.8rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <h1>Homebuyer Equity Analyzer</h1>
+      <p>Simple, phone-first deal checker for helping buyers see whether they are building equity or stepping into a hole.</p>
+      <div class="tag">Renovation loan check included · up to 80% of ARV</div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Quick Answer</h2>
+      <div class="stack">
+        <div id="dealMeter" class="meter">Enter the numbers below</div>
+        <div id="loanMeter" class="meter">Loan fit will show here</div>
+        <div class="result">
+          <div class="label">Plain-English takeaway</div>
+          <p id="takeaway" class="plain">This will explain the deal in simple terms once the numbers are entered.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">1) Main Deal Numbers</h2>
+      <p class="subtle">Yellow boxes are where you type.  Everything else updates automatically.</p>
+
+      <div class="field">
+        <label for="arv">After Repair Value (what it should be worth when fixed up)</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="arv" type="number" inputmode="decimal" value="295000" /></div>
+      </div>
+
+      <div class="field">
+        <label for="offer">Purchase Price / Offer</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="offer" type="number" inputmode="decimal" value="200000" /></div>
+      </div>
+
+      <div class="field">
+        <label for="buyerclose">Buyer Closing Costs</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="buyerclose" type="number" inputmode="decimal" value="5000" /></div>
+      </div>
+
+      <div class="field">
+        <label for="down">Cash Down Payment</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="down" type="number" inputmode="decimal" value="10000" /></div>
+        <span class="hint">This is cash the buyer plans to bring.  Set it to 0 if you want to test the loan without extra money down.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">2) Repairs</h2>
+      <p class="subtle">Leave a box at 0 if it does not apply.</p>
+
+      <details open>
+        <summary>Tap to open or close the repair list</summary>
+        <div class="details-body">
+          <div class="field"><label for="roof">Roof</label><div class="money-wrap"><span class="prefix">$</span><input id="roof" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="hvac">HVAC</label><div class="money-wrap"><span class="prefix">$</span><input id="hvac" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="plumbing">Plumbing</label><div class="money-wrap"><span class="prefix">$</span><input id="plumbing" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="electrical">Electrical</label><div class="money-wrap"><span class="prefix">$</span><input id="electrical" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="foundation">Foundation / Structural</label><div class="money-wrap"><span class="prefix">$</span><input id="foundation" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="windows">Windows / Doors</label><div class="money-wrap"><span class="prefix">$</span><input id="windows" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="kitchen">Kitchen</label><div class="money-wrap"><span class="prefix">$</span><input id="kitchen" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="bathrooms">Bathrooms</label><div class="money-wrap"><span class="prefix">$</span><input id="bathrooms" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="flooring">Flooring</label><div class="money-wrap"><span class="prefix">$</span><input id="flooring" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="paint">Paint / Drywall</label><div class="money-wrap"><span class="prefix">$</span><input id="paint" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="exterior">Exterior / Siding / Gutters</label><div class="money-wrap"><span class="prefix">$</span><input id="exterior" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="landscape">Landscaping / Drainage</label><div class="money-wrap"><span class="prefix">$</span><input id="landscape" type="number" inputmode="decimal" value="0" /></div></div>
+          <div class="field"><label for="misc">Misc. / Contingency</label><div class="money-wrap"><span class="prefix">$</span><input id="misc" type="number" inputmode="decimal" value="5000" /></div></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">3) Equity and Offer Check</h2>
+      <div class="result-grid two">
+        <div class="result good"><div class="label">Total Repairs</div><div id="repairsTotal" class="value">$0</div></div>
+        <div class="result"><div class="label">Total Cost Basis</div><div id="costBasis" class="value">$0</div></div>
+        <div id="equityCard" class="result"><div class="label">Immediate Equity</div><div id="equityNow" class="value">$0</div></div>
+        <div class="result"><div class="label">Equity %</div><div id="equityPct" class="value">0%</div></div>
+        <div class="result warn"><div class="label">Discount Needed From ARV</div><div id="discountNeeded" class="value">$0</div></div>
+        <div class="result"><div class="label">Suggested Max Offer</div><div id="maxOffer" class="value">$0</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">4) Renovation Construction Loan Check</h2>
+      <p class="subtle">This assumes the bank lends up to 80% of the ARV and that the loan is meant to cover the purchase plus the repairs.</p>
+      <div class="result-grid two">
+        <div class="result good"><div class="label">Max Loan Allowed</div><div id="maxLoan" class="value">$0</div></div>
+        <div class="result"><div class="label">Purchase + Repairs</div><div id="purchasePlusRepairs" class="value">$0</div></div>
+        <div class="result"><div class="label">Loan Shortfall</div><div id="loanShortfall" class="value">$0</div></div>
+        <div class="result"><div class="label">Cash Needed Outside Loan</div><div id="cashNeeded" class="value">$0</div></div>
+        <div class="result"><div class="label">Max Purchase Price Allowed</div><div id="maxPurchaseAllowed" class="value">$0</div></div>
+        <div id="loanFitCard" class="result"><div class="label">Does the deal fit?</div><div id="loanFit" class="value">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">5) Future Snapshot</h2>
+
+      <div class="field">
+        <label for="appreciation">Estimated Yearly Appreciation %</label>
+        <input id="appreciation" class="percent" type="number" inputmode="decimal" step="0.1" value="3" />
+        <span class="hint">This is just a planning estimate.  It is not guaranteed.</span>
+      </div>
+
+      <div class="result-grid three">
+        <div class="result"><div class="label">Estimated Value in 1 Year</div><div id="value1" class="value">$0</div></div>
+        <div class="result"><div class="label">Estimated Value in 3 Years</div><div id="value3" class="value">$0</div></div>
+        <div class="result"><div class="label">Estimated Value in 5 Years</div><div id="value5" class="value">$0</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button id="resetBtn" type="button">Reset Example Numbers</button>
+        <button id="saveBtn" class="secondary" type="button">Save Current Numbers</button>
+        <button id="loadBtn" class="secondary" type="button">Load Saved Numbers</button>
+      </div>
+      <div class="mini" style="margin-top:8px;">Save/Load keeps the current numbers on this device in the browser.</div>
+    </div>
+
+    <div class="foot">
+      Planning tool only.  It does not replace lender, appraisal, inspection, title, contractor, or legal advice.
+    </div>
+  </div>
+
+  <script>
+    const defaults = {
+      arv: 295000, offer: 200000, buyerclose: 5000, down: 10000,
+      roof: 0, hvac: 0, plumbing: 0, electrical: 0, foundation: 0,
+      windows: 0, kitchen: 0, bathrooms: 0, flooring: 0, paint: 0,
+      exterior: 0, landscape: 0, misc: 5000, appreciation: 3
+    };
+
+    const allIds = Object.keys(defaults);
+
+    function getNum(id){
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      const v = parseFloat(el.value);
+      return Number.isFinite(v) ? v : 0;
+    }
+
+    function setNum(id, value){
+      const el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+
+    function money(n){
+      return n.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      });
+    }
+
+    function percent(n){
+      return `${n.toFixed(1)}%`;
+    }
+
+    function setText(id, text){
+      document.getElementById(id).textContent = text;
+    }
+
+    function setStatus(el, status){
+      el.classList.remove("good","warn","bad");
+      if (status) el.classList.add(status);
+    }
+
+    function calculate(){
+      const arv = getNum("arv");
+      const offer = getNum("offer");
+      const buyerclose = getNum("buyerclose");
+      const down = getNum("down");
+      const appreciation = getNum("appreciation") / 100;
+
+      const repairs = [
+        "roof","hvac","plumbing","electrical","foundation","windows",
+        "kitchen","bathrooms","flooring","paint","exterior","landscape","misc"
+      ].reduce((sum, id) => sum + getNum(id), 0);
+
+      const costBasis = offer + repairs + buyerclose;
+      const equityNow = arv - costBasis;
+      const equityPct = arv > 0 ? (equityNow / arv) * 100 : 0;
+      const discountNeeded = repairs + buyerclose;
+      const maxOffer = Math.max(arv - discountNeeded, 0);
+
+      const maxLoan = arv * 0.80;
+      const purchasePlusRepairs = offer + repairs;
+      const loanShortfall = Math.max(purchasePlusRepairs - maxLoan, 0);
+      const cashNeeded = buyerclose + down + loanShortfall;
+      const maxPurchaseAllowed = Math.max(maxLoan - repairs, 0);
+      const loanFits = purchasePlusRepairs <= maxLoan;
+
+      const value1 = arv * Math.pow(1 + appreciation, 1);
+      const value3 = arv * Math.pow(1 + appreciation, 3);
+      const value5 = arv * Math.pow(1 + appreciation, 5);
+
+      setText("repairsTotal", money(repairs));
+      setText("costBasis", money(costBasis));
+      setText("equityNow", money(equityNow));
+      setText("equityPct", percent(equityPct));
+      setText("discountNeeded", money(discountNeeded));
+      setText("maxOffer", money(maxOffer));
+      setText("maxLoan", money(maxLoan));
+      setText("purchasePlusRepairs", money(purchasePlusRepairs));
+      setText("loanShortfall", money(loanShortfall));
+      setText("cashNeeded", money(cashNeeded));
+      setText("maxPurchaseAllowed", money(maxPurchaseAllowed));
+      setText("loanFit", loanFits ? "Yes — it appears to fit" : "No — it appears too high");
+      setText("value1", money(value1));
+      setText("value3", money(value3));
+      setText("value5", money(value5));
+
+      const equityCard = document.getElementById("equityCard");
+      const meter = document.getElementById("dealMeter");
+      const loanMeter = document.getElementById("loanMeter");
+      const loanFitCard = document.getElementById("loanFitCard");
+      const takeaway = document.getElementById("takeaway");
+
+      setStatus(equityCard, equityNow >= 0 ? "good" : "bad");
+      setStatus(loanFitCard, loanFits ? "good" : "bad");
+
+      if (equityNow < 0 || !loanFits) {
+        meter.textContent = "Risky · Buyer may be in the hole";
+        loanMeter.textContent = loanFits ? "Loan fit looks okay" : "Loan fit does not work yet";
+        setStatus(meter, "bad");
+        setStatus(loanMeter, loanFits ? "good" : "bad");
+        takeaway.textContent = "Based on these numbers, the buyer may be upside down, the renovation loan may not fit, or both. The offer likely needs to come down, repair costs need to be lower, or more cash will be needed.";
+      } else if (equityPct < 8) {
+        meter.textContent = "Thin · Little room for surprises";
+        loanMeter.textContent = "Loan fit looks okay";
+        setStatus(meter, "warn");
+        setStatus(loanMeter, "good");
+        takeaway.textContent = "This may work, but the cushion is thin. A surprise repair, appraisal issue, or extra closing cost could erase the equity quickly.";
+      } else {
+        meter.textContent = "Healthy · Equity appears to be there";
+        loanMeter.textContent = "Loan fit looks okay";
+        setStatus(meter, "good");
+        setStatus(loanMeter, "good");
+        takeaway.textContent = "This looks healthier. If the repair budget and ARV are realistic, the buyer appears to be building equity instead of stepping into a hole.";
+      }
+    }
+
+    function saveState(){
+      const data = {};
+      allIds.forEach(id => data[id] = getNum(id));
+      localStorage.setItem("homebuyer-equity-analyzer", JSON.stringify(data));
+      alert("Current numbers saved on this device.");
+    }
+
+    function loadState(){
+      const raw = localStorage.getItem("homebuyer-equity-analyzer");
+      if (!raw) {
+        alert("No saved numbers were found on this device yet.");
+        return;
+      }
+      try{
+        const data = JSON.parse(raw);
+        allIds.forEach(id => setNum(id, data[id] ?? defaults[id]));
+        calculate();
+      } catch(e){
+        alert("Saved numbers could not be loaded.");
+      }
+    }
+
+    function resetState(){
+      allIds.forEach(id => setNum(id, defaults[id]));
+      calculate();
+    }
+
+    allIds.forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", calculate);
+      el.addEventListener("change", calculate);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", saveState);
+    document.getElementById("loadBtn").addEventListener("click", loadState);
+    document.getElementById("resetBtn").addEventListener("click", resetState);
+
+    calculate();
+  </script>
+</body>
+</html>
