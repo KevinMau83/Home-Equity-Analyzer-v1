@@ -309,14 +309,18 @@
       <div class="mini" style="margin-top:8px;">Save/Load keeps the current numbers on this device in the browser.</div>
     </div>
 
+    
     <div class="card">
       <h2 class="section-title">6) Mortgage Rate and Payment Info</h2>
-      <p class="subtle">Use this section to show a buyer what the monthly principal and interest payment could look like based on the loan amount and interest rate.</p>
+      <p class="subtle">This section uses your ARV, purchase price, and down payment from above automatically.  You only need to enter the rate, term, and annual tax/insurance numbers.</p>
 
-      <div class="field">
-        <label for="loanamt">Loan Amount</label>
-        <div class="money-wrap"><span class="prefix">$</span><input id="loanamt" type="number" inputmode="decimal" value="236000" /></div>
-        <span class="hint">Tip: use the max loan allowed above or type in the loan amount the lender is discussing.</span>
+      <div class="result-grid two">
+        <div class="result"><div class="label">Market Value Used</div><div id="marketValueUsed" class="value">$0</div></div>
+        <div class="result"><div class="label">Purchase Price Used</div><div id="purchasePriceUsed" class="value">$0</div></div>
+        <div class="result"><div class="label">Down Payment Used</div><div id="downPaymentUsed" class="value">$0</div></div>
+        <div class="result"><div class="label">Estimated Loan Amount</div><div id="loanAmountAuto" class="value">$0</div></div>
+        <div class="result"><div class="label">Estimated PMI Per Month</div><div id="pmiAuto" class="value">$0</div></div>
+        <div class="result"><div class="label">Loan-to-Value</div><div id="ltvValue" class="value">0%</div></div>
       </div>
 
       <div class="field">
@@ -330,19 +334,19 @@
       </div>
 
       <div class="field">
-        <label for="taxes">Estimated Monthly Property Taxes</label>
-        <div class="money-wrap"><span class="prefix">$</span><input id="taxes" type="number" inputmode="decimal" value="150" /></div>
+        <label for="annualTaxes">Estimated Annual Property Taxes</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="annualTaxes" type="number" inputmode="decimal" value="1800" /></div>
       </div>
 
       <div class="field">
-        <label for="insurance">Estimated Monthly Home Insurance</label>
-        <div class="money-wrap"><span class="prefix">$</span><input id="insurance" type="number" inputmode="decimal" value="125" /></div>
+        <label for="annualInsurance">Estimated Annual Home Insurance</label>
+        <div class="money-wrap"><span class="prefix">$</span><input id="annualInsurance" type="number" inputmode="decimal" value="1500" /></div>
       </div>
 
       <div class="field">
-        <label for="pmi">Estimated Monthly PMI</label>
-        <div class="money-wrap"><span class="prefix">$</span><input id="pmi" type="number" inputmode="decimal" value="0" /></div>
-        <span class="hint">If there is no PMI, leave it at 0.</span>
+        <label for="pmiRate">Annual PMI Rate %</label>
+        <input id="pmiRate" class="percent" type="number" inputmode="decimal" step="0.01" value="0.80" />
+        <span class="hint">PMI only applies when the down payment is under 20%.  A simple planning estimate is often around 0.5% to 1.0% of the loan per year.</span>
       </div>
 
       <div class="result-grid two">
@@ -354,6 +358,7 @@
     </div>
 
     <div class="foot">
+
       Planning tool only.  It does not replace lender, appraisal, inspection, title, contractor, tax, or legal advice.
     </div>
   </div>
@@ -364,7 +369,7 @@
       roof: 0, hvac: 0, plumbing: 0, electrical: 0, foundation: 0,
       windows: 0, kitchen: 0, bathrooms: 0, flooring: 0, paint: 0,
       exterior: 0, landscape: 0, misc: 5000, appreciation: 3,
-      loanamt: 236000, rate: 6.50, term: 30, taxes: 150, insurance: 125, pmi: 0
+      loanamt: 236000, rate: 6.50, term: 30, annualTaxes: 1800, annualInsurance: 1500, pmiRate: 0.80
     };
 
     const allIds = Object.keys(defaults);
@@ -438,42 +443,38 @@
       const value3 = arv * Math.pow(1 + appreciation, 3);
       const value5 = arv * Math.pow(1 + appreciation, 5);
 
-      const loanamt = getNum("loanamt");
+      
       const rate = getNum("rate");
       const term = getNum("term");
-      const taxes = getNum("taxes");
-      const insurance = getNum("insurance");
-      const pmi = getNum("pmi");
+      const annualTaxes = getNum("annualTaxes");
+      const annualInsurance = getNum("annualInsurance");
+      const pmiRate = getNum("pmiRate");
 
-      const piPayment = calcMortgagePI(loanamt, rate, term);
-      const escrowEtc = taxes + insurance + pmi;
+      const marketValue = arv;
+      const loanAmount = Math.max(offer - down, 0);
+      const ltv = marketValue > 0 ? (loanAmount / marketValue) * 100 : 0;
+      const pmiMonthly = down < offer * 0.20 ? (loanAmount * (pmiRate / 100)) / 12 : 0;
+      const monthlyTaxes = annualTaxes / 12;
+      const monthlyInsurance = annualInsurance / 12;
+      const piPayment = calcMortgagePI(loanAmount, rate, term);
+      const escrowEtc = monthlyTaxes + monthlyInsurance + pmiMonthly;
       const totalPayment = piPayment + escrowEtc;
-
-      setText("repairsTotal", money(repairs));
-      setText("costBasis", money(costBasis));
-      setText("equityNow", money(equityNow));
-      setText("equityPct", percent(equityPct));
-      setText("discountNeeded", money(discountNeeded));
-      setText("maxOffer", money(maxOffer));
-      setText("maxLoan", money(maxLoan));
-      setText("purchasePlusRepairs", money(purchasePlusRepairs));
-      setText("loanShortfall", money(loanShortfall));
-      setText("cashNeeded", money(cashNeeded));
-      setText("maxPurchaseAllowed", money(maxPurchaseAllowed));
-      setText("loanFit", loanFits ? "Yes — it appears to fit" : "No — it appears too high");
-      setText("value1", money(value1));
-      setText("value3", money(value3));
-      setText("value5", money(value5));
-
+      setText("marketValueUsed", money(marketValue));
+      setText("purchasePriceUsed", money(offer));
+      setText("downPaymentUsed", money(down));
+      setText("loanAmountAuto", money(loanAmount));
+      setText("pmiAuto", money(pmiMonthly));
+      setText("ltvValue", percent(ltv));
       setText("piPayment", money(piPayment));
       setText("escrowEtc", money(escrowEtc));
       setText("totalPayment", money(totalPayment));
 
       const mortgageNote =
-        loanamt > 0 && rate > 0 && term > 0
-          ? "At " + rate.toFixed(2) + "% for " + term + " years, this is the estimated monthly payment before maintenance and utilities."
-          : "Enter a loan amount, rate, and term to estimate payment.";
+        loanAmount > 0 && rate > 0 && term > 0
+          ? "Using the purchase price and down payment above, this estimates the monthly payment.  PMI only applies when the down payment is under 20%."
+          : "Enter a rate and term to estimate payment.";
       setText("mortgageNote", mortgageNote);
+
 
       const equityCard = document.getElementById("equityCard");
       const meter = document.getElementById("dealMeter");
@@ -508,12 +509,12 @@
     function saveState(){
       const data = {};
       allIds.forEach(id => data[id] = getNum(id));
-      localStorage.setItem("homebuyer-equity-analyzer-v2", JSON.stringify(data));
+      localStorage.setItem("homebuyer-equity-analyzer-v3", JSON.stringify(data));
       alert("Current numbers saved on this device.");
     }
 
     function loadState(){
-      const raw = localStorage.getItem("homebuyer-equity-analyzer-v2");
+      const raw = localStorage.getItem("homebuyer-equity-analyzer-v3");
       if (!raw) {
         alert("No saved numbers were found on this device yet.");
         return;
