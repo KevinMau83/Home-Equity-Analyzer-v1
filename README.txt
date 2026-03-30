@@ -1,7 +1,17 @@
-MauMau Properties Homebuyer Equity Analyzer v3
+MauMau Properties Homebuyer Equity Analyzer v3 Fixed
 
-Changes from v2:
-- Mortgage section now auto-uses ARV, purchase price, and down payment from above
-- PMI auto-calculates from loan amount and down payment
-- Taxes and insurance are now annual inputs and convert to monthly automatically
-- Everything else stays the same
+This version rebuilds v3 cleanly and fixes the broken behavior from the earlier modified file.
+
+Included:
+- Logo at top
+- Working main deal section
+- Working repairs section
+- Working equity / offer section
+- Working renovation loan section
+- Working future snapshot
+- Fixed mortgage section using:
+  - ARV as market value
+  - Purchase price from above
+  - Down payment from above
+  - Auto-estimated PMI
+  - Annual taxes and insurance converted to monthly
